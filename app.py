@@ -4,29 +4,39 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from jinja2 import Template
-from weasyprint import HTML
 import datetime
+import os
 
 st.set_page_config(page_title="AlphaFactory", layout="wide")
 st.title("📈 AlphaFactory – Factor Investing Strategy Backtester")
 
 # Sidebar inputs
-st.sidebar.header("📊 Strategy Configuration")
-ticker_input = st.sidebar.text_input("Enter stock tickers (comma-separated):", "AAPL,MSFT,GOOGL,TSLA")
-tickers = [ticker.strip().upper() for ticker in ticker_input.split(",") if ticker.strip()]
-start_date = st.sidebar.date_input("Start Date", datetime.date(2018, 1, 1))
-end_date = st.sidebar.date_input("End Date", datetime.date(2023, 12, 31))
-strategy = st.sidebar.selectbox("Select Strategy", ["Momentum", "Low Volatility"])
-top_n = st.sidebar.slider("Select Top N Stocks", 1, len(tickers), min(3, len(tickers)))
+with st.sidebar:
+    st.header("📊 Strategy Configuration")
+    ticker_input = st.text_input("Enter stock tickers (comma-separated):", "AAPL,MSFT,GOOGL,TSLA")
+    start_date = st.date_input("Start Date", datetime.date(2018, 1, 1))
+    end_date = st.date_input("End Date", datetime.date(2023, 12, 31))
+    strategy = st.selectbox("Select Strategy", ["Momentum", "Low Volatility"])
+    top_n = st.slider("Select Top N Stocks", 1, 10, 3)
+    run_button = st.button("🚀 Run Backtest")
 
-if st.button("🚀 Run Backtest"):
+# Main logic only runs if button is clicked
+if run_button:
+    tickers = [ticker.strip().upper() for ticker in ticker_input.split(",") if ticker.strip()]
+    if len(tickers) == 0:
+        st.warning("Please enter at least one valid ticker.")
+        st.stop()
+
     try:
+        # Download price data
         data = yf.download(tickers, start=start_date, end=end_date, auto_adjust=False)["Adj Close"]
         if data.empty:
-            st.warning("No data found. Please check the tickers and date range.")
+            st.error("No data found. Please check tickers or dates.")
             st.stop()
 
         daily_returns = data.pct_change().dropna()
+
+        # Score calculation
         window = 30
         if strategy == "Momentum":
             scores = daily_returns.rolling(window).mean()
@@ -53,20 +63,19 @@ if st.button("🚀 Run Backtest"):
 
         sharpe_ratio = portfolio_returns.mean() / portfolio_returns.std() * np.sqrt(252)
         total_return = cumulative_returns.iloc[-1] - 1
-
         st.metric("Sharpe Ratio", f"{sharpe_ratio:.2f}")
         st.metric("Total Return", f"{total_return:.2%}")
 
-        # Benchmark
+        # Benchmark comparison
         benchmark_data = yf.download("SPY", start=start_date, end=end_date, auto_adjust=False)["Adj Close"]
-        benchmark_ret = benchmark_data.pct_change().dropna()
-        benchmark_cum = (1 + benchmark_ret).cumprod()
-        benchmark_ret = benchmark_ret.loc[portfolio_returns.index]
+        benchmark_returns = benchmark_data.pct_change().dropna()
+        benchmark_cum = (1 + benchmark_returns).cumprod()
+        benchmark_returns = benchmark_returns.loc[portfolio_returns.index]
         benchmark_cum = benchmark_cum.loc[portfolio_returns.index]
-        benchmark_sharpe = benchmark_ret.mean() / benchmark_ret.std() * np.sqrt(252)
+        benchmark_sharpe = benchmark_returns.mean() / benchmark_returns.std() * np.sqrt(252)
         benchmark_total = benchmark_cum.iloc[-1] - 1
 
-        st.subheader("📊 Benchmark Comparison")
+        st.subheader("📊 Strategy vs Benchmark")
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         cumulative_returns.plot(ax=ax2, label="Strategy")
         benchmark_cum.plot(ax=ax2, label="S&P 500", linestyle="--")
@@ -74,7 +83,7 @@ if st.button("🚀 Run Backtest"):
         ax2.legend()
         st.pyplot(fig2)
 
-        # PDF report generation
+        # Generate HTML report
         with open("report_template.html") as file:
             template = Template(file.read())
 
@@ -91,10 +100,12 @@ if st.button("🚀 Run Backtest"):
             summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total else "⚠️ Your strategy underperformed the S&P 500."
         )
 
-        HTML(string=html_out).write_pdf("AlphaFactory_Report.pdf")
-        with open("AlphaFactory_Report.pdf", "rb") as pdf_file:
-            st.download_button("📄 Download Quant Report (PDF)", pdf_file, file_name="AlphaFactory_Report.pdf")
+        html_path = "AlphaFactory_Report.html"
+        with open(html_path, "w") as out:
+            out.write(html_out)
+
+        with open(html_path, "rb") as file:
+            st.download_button("📄 Download Strategy Report (HTML)", file, file_name="AlphaFactory_Report.html")
 
     except Exception as e:
-        st.error(f"An error occurred: {e}")
-
+        st.error(f"❌ An error occurred: {e}")
