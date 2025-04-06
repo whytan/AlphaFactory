@@ -1,4 +1,5 @@
-import streamlit as st
+
+        import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -87,6 +88,9 @@ if run_button:
         with open("report_template.html") as file:
             template = Template(file.read())
 
+        benchmark_sharpe_val = benchmark_sharpe.item() if hasattr(benchmark_sharpe, 'item') else benchmark_sharpe
+        benchmark_total_val = benchmark_total.item() if hasattr(benchmark_total, 'item') else benchmark_total
+
         html_out = template.render(
             tickers=", ".join(tickers),
             start_date=start_date,
@@ -95,9 +99,9 @@ if run_button:
             top_n=top_n,
             sharpe_ratio=f"{sharpe_ratio:.2f}",
             total_return=f"{total_return:.2%}",
-            benchmark_sharpe=f"{benchmark_sharpe.item():.2f}" if hasattr(benchmark_sharpe, 'item') else f"{benchmark_sharpe:.2f}",
-            benchmark_total=f"{benchmark_total.item():.2%}" if hasattr(benchmark_total, 'item') else f"{benchmark_total:.2%}",
-            summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total.item() if hasattr(benchmark_total, 'item') else benchmark_total else "⚠️ Your strategy underperformed the S&P 500."
+            benchmark_sharpe=f"{benchmark_sharpe_val:.2f}",
+            benchmark_total=f"{benchmark_total_val:.2%}",
+            summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total_val else "⚠️ Your strategy underperformed the S&P 500."
         )
 
         html_path = "AlphaFactory_Report.html"
