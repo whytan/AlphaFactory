@@ -1,10 +1,8 @@
-
-        import streamlit as st
+import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from jinja2 import Template
 import datetime
 import os
 
@@ -83,33 +81,6 @@ if run_button:
         ax2.set_ylabel("Growth of $1")
         ax2.legend()
         st.pyplot(fig2)
-
-        # Generate HTML report
-        with open("report_template.html") as file:
-            template = Template(file.read())
-
-        benchmark_sharpe_val = benchmark_sharpe.item() if hasattr(benchmark_sharpe, 'item') else benchmark_sharpe
-        benchmark_total_val = benchmark_total.item() if hasattr(benchmark_total, 'item') else benchmark_total
-
-        html_out = template.render(
-            tickers=", ".join(tickers),
-            start_date=start_date,
-            end_date=end_date,
-            strategy=strategy,
-            top_n=top_n,
-            sharpe_ratio=f"{sharpe_ratio:.2f}",
-            total_return=f"{total_return:.2%}",
-            benchmark_sharpe=f"{benchmark_sharpe_val:.2f}",
-            benchmark_total=f"{benchmark_total_val:.2%}",
-            summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total_val else "⚠️ Your strategy underperformed the S&P 500."
-        )
-
-        html_path = "AlphaFactory_Report.html"
-        with open(html_path, "w") as out:
-            out.write(html_out)
-
-        with open(html_path, "rb") as file:
-            st.download_button("📄 Download Strategy Report (HTML)", file, file_name="AlphaFactory_Report.html")
 
     except Exception as e:
         st.error(f"❌ An error occurred: {e}")
