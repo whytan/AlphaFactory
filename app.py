@@ -13,7 +13,7 @@ st.title("📈 AlphaFactory – Factor Investing Strategy Backtester")
 # Sidebar inputs
 with st.sidebar:
     st.header("📊 Strategy Configuration")
-    ticker_input = st.text_input("Enter stock tickers (comma-separated):", "AAPL,MSFT,GOOGL,TSLA")
+    ticker_input = st.text_input("Enter stock tickers (comma-separated):", "")
     start_date = st.date_input("Start Date", datetime.date(2018, 1, 1))
     end_date = st.date_input("End Date", datetime.date(2023, 12, 31))
     strategy = st.selectbox("Select Strategy", ["Momentum", "Low Volatility"])
@@ -78,7 +78,7 @@ if run_button:
         st.subheader("📊 Strategy vs Benchmark")
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         cumulative_returns.plot(ax=ax2, label="Strategy")
-        benchmark_cum.plot(ax=ax2, label="S&P 500", linestyle="--")
+        benchmark_cum.plot(ax=ax2, label="SPY", linestyle="--")
         ax2.set_ylabel("Growth of $1")
         ax2.legend()
         st.pyplot(fig2)
@@ -95,9 +95,9 @@ if run_button:
             top_n=top_n,
             sharpe_ratio=f"{sharpe_ratio:.2f}",
             total_return=f"{total_return:.2%}",
-            benchmark_sharpe=f"{benchmark_sharpe:.2f}",
-            benchmark_total=f"{benchmark_total:.2%}",
-            summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total else "⚠️ Your strategy underperformed the S&P 500."
+            benchmark_sharpe=f"{benchmark_sharpe.item():.2f}" if hasattr(benchmark_sharpe, 'item') else f"{benchmark_sharpe:.2f}",
+            benchmark_total=f"{benchmark_total.item():.2%}" if hasattr(benchmark_total, 'item') else f"{benchmark_total:.2%}",
+            summary="✅ Your strategy outperformed the S&P 500!" if total_return > benchmark_total.item() if hasattr(benchmark_total, 'item') else benchmark_total else "⚠️ Your strategy underperformed the S&P 500."
         )
 
         html_path = "AlphaFactory_Report.html"
