@@ -4,4 +4,10 @@ matplotlib
 pandas
 jinja2
 weasyprint
+streamlit
+yfinance
+matplotlib
+pandas
+jinja2
+weasyprint
 
