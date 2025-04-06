@@ -26,3 +26,31 @@
     <p>{{ summary }}</p>
 </body>
 </html>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        h1 { color: #333366; }
+        h2 { border-bottom: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>AlphaFactory Quant Strategy Report</h1>
+    <p><strong>Tickers:</strong> {{ tickers }}</p>
+    <p><strong>Date Range:</strong> {{ start_date }} to {{ end_date }}</p>
+    <p><strong>Strategy:</strong> {{ strategy }}</p>
+    <p><strong>Top N Stocks:</strong> {{ top_n }}</p>
+
+    <h2>Performance Metrics</h2>
+    <ul>
+        <li>Sharpe Ratio: {{ sharpe_ratio }}</li>
+        <li>Total Return: {{ total_return }}</li>
+        <li>Benchmark Sharpe Ratio: {{ benchmark_sharpe }}</li>
+        <li>Benchmark Total Return: {{ benchmark_total }}</li>
+    </ul>
+
+    <h2>Summary</h2>
+    <p>{{ summary }}</p>
+</body>
+</html>
